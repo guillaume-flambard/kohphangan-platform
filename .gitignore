@@ -7,12 +7,12 @@ react-frontend/dist/
 react-frontend/build/
 
 # Environment files
-.env
+laravel-api/.env.gcp
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
-laravel-api/.env
+laravel-api/.env.gcp
 
 # OS files
 .DS_Store

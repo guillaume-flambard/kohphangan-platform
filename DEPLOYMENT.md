@@ -44,8 +44,8 @@ cd kohphangan-platform
 
 2. **Setup environment**
 ```bash
-cp .env.example .env
-# Edit .env with your local settings
+cp .env.gcp.example .env.gcp
+# Edit .env.gcp with your local settings
 ```
 
 3. **Start with Docker (Recommended)**
