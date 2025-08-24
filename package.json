@@ -1,0 +1,33 @@
+{
+  "name": "kohphangan-platform",
+  "version": "1.0.0",
+  "description": "Koh Phangan Party Platform",
+  "scripts": {
+    "dev": "docker-compose up --build",
+    "dev:frontend": "cd react-frontend && npm run dev",
+    "dev:backend": "cd laravel-api && php artisan serve",
+    "build": "npm run build:frontend",
+    "build:frontend": "cd react-frontend && npm run build",
+    "test": "npm run test:frontend && npm run test:backend",
+    "test:frontend": "cd react-frontend && npm run test",
+    "test:backend": "cd laravel-api && php artisan test",
+    "setup": "npm run setup:frontend && npm run setup:backend",
+    "setup:frontend": "cd react-frontend && npm install",
+    "setup:backend": "cd laravel-api && composer install && php artisan key:generate",
+    "deploy:prod": "gh workflow run deploy-production.yml",
+    "deploy:dev": "gh workflow run deploy-development.yml"
+  },
+  "keywords": [
+    "koh-phangan",
+    "party",
+    "tickets",
+    "react",
+    "laravel"
+  ],
+  "author": "StrayEye Team",
+  "license": "MIT",
+  "devDependencies": {},
+  "workspaces": [
+    "react-frontend"
+  ]
+}

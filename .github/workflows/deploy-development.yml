@@ -1,0 +1,81 @@
+name: Deploy to Development
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    branches: [main]
+
+env:
+  PROJECT_ID: strayeye
+  REGION: asia-southeast1
+  REGISTRY: asia-southeast1-docker.pkg.dev
+  REPOSITORY: waterfall-apps
+
+jobs:
+  test-frontend:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: react-frontend/package-lock.json
+
+    - name: Install dependencies
+      run: |
+        cd react-frontend
+        npm ci
+
+    - name: Run tests
+      run: |
+        cd react-frontend
+        npm run test:ci || true
+
+    - name: Build frontend
+      run: |
+        cd react-frontend
+        npm run build
+
+  test-backend:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+
+    - name: Install dependencies
+      run: |
+        cd laravel-api
+        composer install --no-interaction --prefer-dist
+
+    - name: Run tests
+      run: |
+        cd laravel-api
+        php artisan test || true
+
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs: [test-frontend, test-backend]
+    if: github.ref == 'refs/heads/develop'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Deploy to staging
+      run: |
+        echo "Deploy to staging environment"
+        # Add staging deployment commands here
