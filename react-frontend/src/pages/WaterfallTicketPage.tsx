@@ -1,10 +1,8 @@
-import {useEffect, useState} from 'react';
+import {useEffect} from 'react';
 import {motion} from 'framer-motion';
-import {Calendar, Clock, CreditCard, MapPin, Music, Sparkles, Waves} from 'lucide-react';
+import {Calendar, Clock, MapPin, Music, Sparkles} from 'lucide-react';
 
 export default function WaterfallTicketPage() {
-  const [, setLoading] = useState(false);
-
   const eventDetails = {
     name: 'Waterfall Festival Koh Phangan',
     subtitle: 'Special Edition • Aug 27th',
@@ -14,38 +12,6 @@ export default function WaterfallTicketPage() {
     price: 900,
     description: 'One last night to lose yourself in sound, jungle, and sunrise magic. Experience 4 custom stages in a natural waterfall setting.',
     included: ['Fast track entry', '1 free beer', '4 custom stages', 'Fire dancers', 'Laser shows', 'Food stalls', 'Chill zones']
-  };
-
-  const handleTabPayment = () => {
-    setLoading(true);
-    try {
-      if (window.TabCheckout) {
-        window.TabCheckout.open({
-          amount: eventDetails.price,
-          currency: 'THB',
-          description: `${eventDetails.name} - Regular Entry`,
-          onSuccess: () => {
-            setLoading(false);
-            alert('Payment successful! See you at the festival!');
-          },
-          onError: (error: unknown) => {
-            console.error('Payment error:', error);
-            setLoading(false);
-            alert('Payment failed. Please try again.');
-          },
-          onCancel: () => {
-            setLoading(false);
-          }
-        });
-      } else {
-        alert('Payment widget not loaded. Please refresh and try again.');
-        setLoading(false);
-      }
-    } catch (error) {
-      console.error('Widget error:', error);
-      setLoading(false);
-      alert('Payment system error. Please try again.');
-    }
   };
 
 
@@ -112,9 +78,13 @@ export default function WaterfallTicketPage() {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2, type: "spring" }}
-              className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-400 to-teal-400 rounded-full mb-4"
+              className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-400 to-teal-400 rounded-full mb-4 overflow-hidden"
             >
-              <Waves className="w-10 h-10 text-white" />
+              <img 
+                src="/waterfall-party.jpeg" 
+                alt="Waterfall Festival" 
+                className="w-full h-full object-cover"
+              />
             </motion.div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-200 to-teal-200 bg-clip-text text-transparent">
               {eventDetails.name}
@@ -178,21 +148,6 @@ export default function WaterfallTicketPage() {
             </div>
           </motion.div>
 
-          {/* Payment Options */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="space-y-4"
-          >
-            <button
-              onClick={handleTabPayment}
-              className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-6 px-6 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl"
-            >
-              <CreditCard className="w-6 h-6" />
-              Get Your Ticket - ฿{eventDetails.price.toLocaleString()}
-            </button>
-          </motion.div>
 
           <div className="text-center text-blue-200 text-sm">
             <p>Secure payment • Instant confirmation • Mobile optimized</p>
