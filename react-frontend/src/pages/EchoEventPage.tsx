@@ -18,7 +18,7 @@ export default function WaterfallEchoEventPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-teal-800 to-green-900">
       {/* Main content - Tab widget iframe */}
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
