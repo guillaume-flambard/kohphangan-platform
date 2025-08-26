@@ -95,5 +95,6 @@ jobs:
           --region ${{ env.REGION }} \
           --allow-unauthenticated \
           --port 8080 \
-          --add-cloudsql-instances ${{ env.PROJECT_ID }}:${{ env.REGION }}:waterfall-db \
+          --add-cloudsql-instances ${{ env.PROJECT_ID }}:${{ env.REGION }}:minerva \
+          --set-env-vars "APP_ENV=production,APP_DEBUG=false,APP_KEY=base64:WaterfallPartyEcho2025SecretKey123456789,APP_URL=https://waterfall-api.strayeye.com,DB_CONNECTION=mysql,DB_HOST=,DB_PORT=,DB_SOCKET=/cloudsql/strayeye:asia-southeast1:minerva,DB_DATABASE=minerva_core,DB_USERNAME=root,DB_PASSWORD=SYtCK6nqbXZwN4" \
           --platform managed
