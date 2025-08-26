@@ -10,6 +10,7 @@ import FavoritesPage from './pages/FavoritesPage'
 import MapPage from './pages/MapPage'
 import TransportPage from './pages/TransportPage'
 import WaterfallTicketPage from './pages/WaterfallTicketPage'
+import EchoEventPage from './pages/EchoEventPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,6 +39,7 @@ function App() {
             <Route path="/map" element={<MapPage />} />
             <Route path="/transport" element={<TransportPage />} />
             <Route path="/events/waterfall/echo" element={<WaterfallTicketPage />} />
+            <Route path="/events/echo" element={<EchoEventPage />} />
           </Routes>
         </div>
       </Router>
