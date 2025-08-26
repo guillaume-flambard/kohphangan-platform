@@ -1,18 +1,18 @@
 import {useEffect} from 'react';
 
-export default function EchoEventPage() {
+export default function WaterfallEchoEventPage() {
   useEffect(() => {
     // Set page title
-    document.title = 'Echo Event - Phangan.ai';
+    document.title = 'Waterfall Festival Echo - Phangan.ai';
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-800 to-indigo-900">
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-teal-800 to-green-900">
       {/* Header with minimal branding */}
       <div className="bg-black/20 backdrop-blur-sm border-b border-white/10">
         <div className="container mx-auto px-4 py-4">
           <h1 className="text-xl font-semibold text-white/90">
-            phangan.ai/events/echo
+            phangan.ai/events/waterfall/echo
           </h1>
         </div>
       </div>
@@ -23,7 +23,7 @@ export default function EchoEventPage() {
           {/* Event title */}
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-white mb-2">
-              Echo Event
+              Waterfall Festival Echo
             </h2>
             <p className="text-white/70">
               Secure payment powered by Tab Travel
@@ -33,13 +33,13 @@ export default function EchoEventPage() {
           {/* Tab widget iframe */}
           <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-1">
             <iframe
-              src="https://checkout.tab.travel/product/eeatl-act-3"
+              src="https://checkout.tab.travel/product/eeatl-act-1"
               width="100%"
               height="800"
               frameBorder="0"
               scrolling="auto"
               className="rounded-xl"
-              title="Echo Event Booking"
+              title="Waterfall Festival Echo Booking"
               loading="lazy"
             />
           </div>
