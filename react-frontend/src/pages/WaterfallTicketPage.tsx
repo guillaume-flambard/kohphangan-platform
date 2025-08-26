@@ -1,23 +1,74 @@
-import { motion } from 'framer-motion';
-import { 
-  Calendar, 
-  Clock, 
-  MapPin, 
-  Music,
-  Sparkles,
-  Waves
-} from 'lucide-react';
+import {useEffect, useState} from 'react';
+import {motion} from 'framer-motion';
+import {Calendar, Clock, CreditCard, MapPin, Music, Sparkles, Waves} from 'lucide-react';
 
 export default function WaterfallTicketPage() {
+  const [, setLoading] = useState(false);
+
   const eventDetails = {
-    name: 'Waterfall Party Echo',
-    date: 'Saturday, Aug 24, 2025',
-    time: '8:00 PM - 4:00 AM',
-    location: 'Secret Waterfall, Koh Phangan',
+    name: 'Waterfall Festival Koh Phangan',
+    subtitle: 'Special Edition • Aug 27th',
+    date: 'Wednesday, Aug 27, 2025',
+    time: '9:00 PM - 7:00 AM',
+    location: 'Waterfall Festival, Koh Phangan',
     price: 900,
-    description: 'Experience the ultimate tropical party under the stars at our secret waterfall location. Dance to world-class DJs surrounded by nature\'s beauty.',
-    included: ['Welcome drink', 'Professional DJ sets', 'Light show', 'Security', 'Chill-out areas', 'Photo opportunities']
+    description: 'One last night to lose yourself in sound, jungle, and sunrise magic. Experience 4 custom stages in a natural waterfall setting.',
+    included: ['Fast track entry', '1 free beer', '4 custom stages', 'Fire dancers', 'Laser shows', 'Food stalls', 'Chill zones']
   };
+
+  const handleTabPayment = () => {
+    setLoading(true);
+    try {
+      if (window.TabCheckout) {
+        window.TabCheckout.open({
+          amount: eventDetails.price,
+          currency: 'THB',
+          description: `${eventDetails.name} - Regular Entry`,
+          onSuccess: () => {
+            setLoading(false);
+            alert('Payment successful! See you at the festival!');
+          },
+          onError: (error: unknown) => {
+            console.error('Payment error:', error);
+            setLoading(false);
+            alert('Payment failed. Please try again.');
+          },
+          onCancel: () => {
+            setLoading(false);
+          }
+        });
+      } else {
+        alert('Payment widget not loaded. Please refresh and try again.');
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error('Widget error:', error);
+      setLoading(false);
+      alert('Payment system error. Please try again.');
+    }
+  };
+
+
+  // Load Tab widget
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.innerHTML = `
+      window.widgetSettings = {
+        businessCode: "eeatl",
+      };
+      (()=>{function t(){window.widgetSettings.baseURL=window.widgetSettings.baseURL||"https://checkout.tab.travel";var t=document.createElement("script"),e=(t.type="text/javascript",t.async=!0,t.src="https://checkout.tab.travel/widget.js",document.getElementsByTagName("script")[0]);e.parentNode.insertBefore(t,e)}"complete"===document.readyState?t():window.attachEvent?window.attachEvent("onload",t):window.addEventListener("load",t,!1)})();
+    `;
+    document.head.appendChild(script);
+
+    return () => {
+      try {
+        document.head.removeChild(script);
+      } catch (e) {
+        console.error('Error removing script:', e);
+      }
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-teal-800 to-green-900 relative overflow-hidden">
@@ -127,7 +178,7 @@ export default function WaterfallTicketPage() {
             </div>
           </motion.div>
 
-          {/* EventPop Widget */}
+          {/* Payment Options */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -135,10 +186,10 @@ export default function WaterfallTicketPage() {
             className="space-y-4"
           >
             <button
-              onClick={() => window.open('https://www.eventpop.me/e/106001', '_blank')}
-              className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white py-6 px-6 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl"
+              onClick={handleTabPayment}
+              className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-6 px-6 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl"
             >
-              <Sparkles className="w-6 h-6" />
+              <CreditCard className="w-6 h-6" />
               Get Your Ticket - ฿{eventDetails.price.toLocaleString()}
             </button>
           </motion.div>
