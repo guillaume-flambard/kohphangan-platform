@@ -26,14 +26,15 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '20'
-        cache: 'npm'
-        cache-dependency-path: react-frontend/package-lock.json
 
-    - name: Install dependencies
+    - name: Upgrade npm
+      run: npm install -g npm@latest
+
+    - name: Clean install
       run: |
-        cd react-frontend
         rm -rf node_modules package-lock.json
         npm install
+      working-directory: ./react-frontend
 
     - name: Build frontend
       run: |
