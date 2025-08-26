@@ -19,16 +19,24 @@ export default function WaterfallEchoEventPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Full screen iframe */}
-      <iframe
-        src="https://checkout.tab.travel/product/eeatl-act-1"
-        width="100%"
-        height="100vh"
-        frameBorder="0"
-        scrolling="auto"
-        title="Waterfall Party Booking via Echo"
-        style={{ border: 'none', display: 'block' }}
-      />
+      {/* Main content - Tab widget iframe */}
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-2xl mx-auto">
+          {/* Tab widget iframe */}
+          <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-1">
+            <iframe
+              src="https://checkout.tab.travel/product/eeatl-act-1"
+              width="100%"
+              height="800"
+              frameBorder="0"
+              scrolling="auto"
+              className="rounded-xl"
+              title="Waterfall Party Booking via Echo"
+              loading="lazy"
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
