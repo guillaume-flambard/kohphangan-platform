@@ -25,11 +25,14 @@ RUN a2enmod rewrite
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy existing application directory contents
-COPY . /var/www/html
+# Copy composer files first for better caching
+COPY composer.json composer.lock /var/www/html/
 
 # Install Laravel dependencies
 RUN composer install --no-interaction --optimize-autoloader --no-dev
+
+# Copy the rest of the application
+COPY . /var/www/html
 
 # Create required directories and set permissions
 RUN mkdir -p storage/logs storage/framework/{cache,sessions,views} bootstrap/cache \
