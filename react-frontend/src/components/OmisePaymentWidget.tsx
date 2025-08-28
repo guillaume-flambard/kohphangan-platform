@@ -39,7 +39,6 @@ const containerVariants = {
     y: 0,
     transition: {
       duration: 0.6,
-      ease: [0.645, 0.045, 0.355, 1.000],
       staggerChildren: 0.1
     }
   }
@@ -52,7 +51,6 @@ const itemVariants = {
     y: 0,
     transition: {
       duration: 0.4,
-      ease: [0.645, 0.045, 0.355, 1.000]
     }
   }
 };
@@ -76,7 +74,7 @@ interface EventDetails {
 
 interface OmisePaymentWidgetProps {
   eventDetails: EventDetails;
-  onSuccess?: (data: any) => void;
+  onSuccess?: (data: unknown) => void;
   onError?: (error: string) => void;
 }
 
@@ -124,7 +122,12 @@ const translations = {
     days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
     // Months
     months: ['January', 'February', 'March', 'April', 'May', 'June', 
-             'July', 'August', 'September', 'October', 'November', 'December']
+             'July', 'August', 'September', 'October', 'November', 'December'],
+    // Payment method names
+    promptPayName: 'PromptPay',
+    truemoneyName: 'TrueMoney Wallet',
+    internetBankingName: 'Internet Banking',
+    creditCardName: 'Credit/Debit Card'
   },
   th: {
     choosePayment: 'เลือกวิธีการชำระเงิน',
@@ -161,9 +164,7 @@ const translations = {
     languageNote: '🇺🇸 เปลี่ยนเป็นภาษาอังกฤษสำหรับบัตรเครดิตต่างประเทศ',
     // Additional UI translations
     selectQuantity: 'เลือกจำนวน',
-    quantity: 'จำนวน',
     confirmPayment: 'ยืนยันการชำระเงิน',
-    back: 'กลับ',
     next: 'ถัดไป',
     cancel: 'ยกเลิก',
     retry: 'ลองอีกครั้ง',
@@ -194,7 +195,7 @@ const translations = {
 };
 
 // Date formatting utilities
-const formatDateForLanguage = (dateString: string, language: 'en' | 'th', t: any) => {
+const formatDateForLanguage = (dateString: string, language: 'en' | 'th', t: unknown) => {
   try {
     // Parse the original date string (e.g., "Friday, Aug 29, 2025")
     const date = new Date(dateString);
@@ -215,7 +216,7 @@ const formatDateForLanguage = (dateString: string, language: 'en' | 'th', t: any
   }
 };
 
-const translateEventDetails = (eventDetails: EventDetails, language: 'en' | 'th', t: any) => {
+const translateEventDetails = (eventDetails: EventDetails, language: 'en' | 'th', t: unknown) => {
   if (language === 'th') {
     return {
       ...eventDetails,
@@ -338,7 +339,7 @@ export default function OmisePaymentWidget({
           
           if (data.success && data.public_key) {
             setOmisePublicKey(data.public_key);
-            (window as any).Omise.setPublicKey(data.public_key);
+            (window as unknown).Omise.setPublicKey(data.public_key);
           }
         };
 
@@ -400,7 +401,7 @@ export default function OmisePaymentWidget({
         }
       };
 
-      (window as any).Omise.createToken('card', tokenData, async (statusCode: number, token: any) => {
+      (window as unknown).Omise.createToken('card', tokenData, async (statusCode: number, token: unknown) => {
         if (statusCode === 200) {
           try {
             // Send payment request to backend
@@ -521,7 +522,7 @@ export default function OmisePaymentWidget({
             className="w-full h-48 object-cover"
             initial={{ scale: 1.1 }}
             animate={{ scale: 1 }}
-            transition={{ duration: 0.8, ease: [0.645, 0.045, 0.355, 1.000] }}
+            transition={{ duration: 0.8,  }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
           
@@ -711,8 +712,7 @@ export default function OmisePaymentWidget({
                   y: 0,
                   transition: {
                     duration: 0.5,
-                    ease: [0.645, 0.045, 0.355, 1.000]
-                  }
+                                }
                 }}
                 exit={{ 
                   opacity: 0, 
