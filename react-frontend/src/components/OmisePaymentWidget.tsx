@@ -78,6 +78,16 @@ interface OmisePaymentWidgetProps {
   onError?: (error: string) => void;
 }
 
+// Global types for Omise
+declare global {
+  interface Window {
+    Omise: {
+      setPublicKey: (key: string) => void;
+      createToken: (type: string, data: any, callback: (statusCode: number, response: any) => void) => void;
+    };
+  }
+}
+
 // Language detection and translations
 const detectLanguage = () => {
   const lang = navigator.language || navigator.languages[0] || 'en';
@@ -194,8 +204,64 @@ const translations = {
   }
 };
 
+// Types for translations
+interface TranslationKeys {
+  choosePayment: string;
+  tickets: string;
+  total: string;
+  ticket: string;
+  tickets_plural: string;
+  contactInfo: string;
+  cardInfo: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  cardHolder: string;
+  cardNumber: string;
+  processing: string;
+  payButton: string;
+  backToMethods: string;
+  securedBy: string;
+  trustLine: string;
+  comingSoon: string;
+  available: string;
+  unavailable: string;
+  selectPayment: string;
+  soldBy: string;
+  quantity: string;
+  perTicket: string;
+  continue: string;
+  back: string;
+  languageNote: string;
+  eventName: string;
+  eventDescription: string;
+  eventLocation: string;
+  ticketProvider: string;
+  days: string[];
+  months: string[];
+  promptPayName: string;
+  truemoneyName: string;
+  internetBankingName: string;
+  creditCardName: string;
+  selectQuantity?: string;
+  confirmPayment?: string;
+  next?: string;
+  cancel?: string;
+  retry?: string;
+  paymentSuccessful?: string;
+  paymentFailed?: string;
+  paymentPending?: string;
+  paymentCancelled?: string;
+  invalidInput?: string;
+  networkError?: string;
+  tryAgain?: string;
+  required?: string;
+  invalidEmail?: string;
+  invalidCard?: string;
+}
+
 // Date formatting utilities
-const formatDateForLanguage = (dateString: string, language: 'en' | 'th', t: unknown) => {
+const formatDateForLanguage = (dateString: string, language: 'en' | 'th', t: TranslationKeys) => {
   try {
     // Parse the original date string (e.g., "Friday, Aug 29, 2025")
     const date = new Date(dateString);
@@ -216,7 +282,7 @@ const formatDateForLanguage = (dateString: string, language: 'en' | 'th', t: unk
   }
 };
 
-const translateEventDetails = (eventDetails: EventDetails, language: 'en' | 'th', t: unknown) => {
+const translateEventDetails = (eventDetails: EventDetails, language: 'en' | 'th', t: TranslationKeys) => {
   if (language === 'th') {
     return {
       ...eventDetails,
@@ -339,7 +405,7 @@ export default function OmisePaymentWidget({
           
           if (data.success && data.public_key) {
             setOmisePublicKey(data.public_key);
-            (window as unknown).Omise.setPublicKey(data.public_key);
+            window.Omise.setPublicKey(data.public_key);
           }
         };
 
@@ -401,7 +467,7 @@ export default function OmisePaymentWidget({
         }
       };
 
-      (window as unknown).Omise.createToken('card', tokenData, async (statusCode: number, token: unknown) => {
+      window.Omise.createToken('card', tokenData, async (statusCode: number, token: any) => {
         if (statusCode === 200) {
           try {
             // Send payment request to backend
@@ -522,7 +588,7 @@ export default function OmisePaymentWidget({
             className="w-full h-48 object-cover"
             initial={{ scale: 1.1 }}
             animate={{ scale: 1 }}
-            transition={{ duration: 0.8,  }}
+            transition={{ duration: 0.8 }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
           
@@ -711,8 +777,8 @@ export default function OmisePaymentWidget({
                   height: 'auto', 
                   y: 0,
                   transition: {
-                    duration: 0.5,
-                                }
+                    duration: 0.5
+                  }
                 }}
                 exit={{ 
                   opacity: 0, 
