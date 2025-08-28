@@ -28,9 +28,19 @@ WORKDIR /var/www/html
 # Copy existing application directory contents
 COPY . /var/www/html
 
-# Install Laravel dependencies
-RUN composer install --no-interaction --optimize-autoloader --no-dev
+# Copy composer files first for better caching
+COPY composer.json composer.lock /var/www/html/
 
+# Install Laravel dependencies
+RUN composer install --no-interaction --optimize-autoloader --no-dev --verbose
+
+# Copy the rest of the application and preserve vendor directory
+COPY . /var/www/html
+RUN rm -rf /var/www/html/vendor /var/www/html/composer.lock
+COPY composer.json composer.lock /var/www/html/
+
+# Reinstall dependencies to ensure vendor directory is correct
+RUN composer install --no-interaction --optimize-autoloader --no-dev
 # Create required directories and set permissions
 RUN mkdir -p storage/logs storage/framework/{cache,sessions,views} bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache \
