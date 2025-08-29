@@ -16,7 +16,7 @@ return new class extends Migration {
       $table->string('attendee_phone')->nullable();
       $table->decimal('price', 8, 2);
       $table->string('currency', 3)->default('THB');
-      $table->enum('payment_method', ['tab', 'cash'])->default('tab');
+      $table->enum('payment_method', ['cash', 'omise'])->default('omise');
       $table->enum('payment_status', ['pending', 'completed', 'failed', 'refunded'])->default('pending');
       $table->string('tab_payment_id')->nullable();
       $table->text('qr_code');

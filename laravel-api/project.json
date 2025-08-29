@@ -1,0 +1,44 @@
+{
+  "name": "kohphangan-api",
+  "root": "kohphangan/laravel-api",
+  "sourceRoot": "kohphangan/laravel-api/app",
+  "projectType": "application",
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "php artisan serve --port=8002",
+        "cwd": "kohphangan/laravel-api"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "composer install --no-dev --optimize-autoloader",
+        "cwd": "kohphangan/laravel-api"
+      }
+    },
+    "install": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "composer install",
+        "cwd": "kohphangan/laravel-api"
+      }
+    },
+    "migrate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "php artisan migrate",
+        "cwd": "kohphangan/laravel-api"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "php artisan test",
+        "cwd": "kohphangan/laravel-api"
+      }
+    }
+  },
+  "tags": ["scope:kohphangan", "type:app", "platform:laravel"]
+}

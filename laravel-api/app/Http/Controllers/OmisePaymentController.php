@@ -12,8 +12,6 @@ use Omise;
 use OmiseCharge;
 use OmiseRecipient;
 
-// DO NOT add 'use Omise...' statements here. They are in the global namespace.
-
 class OmisePaymentController extends Controller
 {
     private $omiseSecretKey;
@@ -21,13 +19,20 @@ class OmisePaymentController extends Controller
 
     public function __construct()
     {
-        $this->omiseSecretKey = env('OMISE_SECRET_KEY');
-        $this->omisePublicKey = env('OMISE_PUBLIC_KEY');
+        $this->omiseSecretKey = config('omise.secret_key');
+        $this->omisePublicKey = config('omise.public_key');
 
-        // Configure Omise
-        if (class_exists('\OmiseCharge')) { // Check for a class that exists
-            Omise::setSecretKey($this->omiseSecretKey);
-            Omise::setApiVersion('2019-05-29');
+        // Configure Omise using constants
+        if ($this->omiseSecretKey && $this->omisePublicKey) {
+            if (!defined('OMISE_SECRET_KEY')) {
+                define('OMISE_SECRET_KEY', $this->omiseSecretKey);
+            }
+            if (!defined('OMISE_PUBLIC_KEY')) {
+                define('OMISE_PUBLIC_KEY', $this->omisePublicKey);
+            }
+            if (!defined('OMISE_API_VERSION')) {
+                define('OMISE_API_VERSION', config('omise.api_version'));
+            }
         }
     }
 
