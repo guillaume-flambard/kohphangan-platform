@@ -22,6 +22,7 @@ const queryClient = new QueryClient({
   }
 })
 
+// Waterfall Festival Payment System - Production Ready
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
