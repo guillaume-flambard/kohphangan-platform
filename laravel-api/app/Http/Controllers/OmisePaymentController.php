@@ -171,6 +171,12 @@ class OmisePaymentController extends Controller
         'id' => $ticket->id,
         'ticket_number' => $ticket->ticket_number,
         'attendee_name' => $ticket->attendee_name,
+        'qr_code' => $ticket->qr_code,
+        'price' => $ticket->price,
+        'currency' => $ticket->currency,
+        'event_name' => $ticket->event_name,
+        'payment_status' => $ticket->payment_status,
+        'status' => $ticket->status
       ];
     }
     return $ticketsData;

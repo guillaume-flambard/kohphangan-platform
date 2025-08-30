@@ -231,14 +231,14 @@ export default function HomePage() {
                   </div>
                   
                   <div className="flex flex-wrap gap-1 mb-4">
-                    {event.genre.slice(0, 2).map((g) => (
+                    {(event.genre || []).slice(0, 2).map((g) => (
                       <span key={g} className="px-2 py-1 text-xs bg-purple-600/50 text-purple-100 border border-purple-400/30 rounded">
                         {g}
                       </span>
                     ))}
-                    {event.genre.length > 2 && (
+                    {(event.genre || []).length > 2 && (
                       <span className="px-2 py-1 text-xs bg-purple-600/50 text-purple-100 border border-purple-400/30 rounded">
-                        +{event.genre.length - 2} more
+                        +{(event.genre || []).length - 2} more
                       </span>
                     )}
                   </div>

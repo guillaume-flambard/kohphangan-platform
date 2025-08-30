@@ -71,7 +71,7 @@ interface EventStats {
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 // Custom hooks for API calls
-const useEvents = (filters: Record<string, any> = {}) => {
+const useEvents = (filters: Record<string, never> = {}) => {
   const queryParams = new URLSearchParams();
 
   Object.entries(filters).forEach(([key, value]) => {
@@ -227,7 +227,7 @@ export default function EventsPage() {
   };
 
   // Generate genres from scraped events data
-  const genres = ['all', ...new Set(uniqueEvents.flatMap(event => event.primary_keywords || []))].slice(0, 10);
+  const genres = ['all', ...new Set((uniqueEvents || []).flatMap(event => event.primary_keywords || []))].slice(0, 10);
 
   // Mock events for payment testing when API is slow or empty
   const mockEvents: ScrapedEvent[] = [

@@ -345,7 +345,7 @@ export default function TransportPage() {
 
                         {/* Amenities */}
                         <div className="flex flex-wrap gap-1 mb-4">
-                          {route.amenities.slice(0, 4).map((amenity) => (
+                          {(route.amenities || []).slice(0, 4).map((amenity) => (
                             <span key={amenity} className="px-2 py-1 text-xs bg-blue-600/50 text-blue-100 rounded">
                               {amenity}
                             </span>
