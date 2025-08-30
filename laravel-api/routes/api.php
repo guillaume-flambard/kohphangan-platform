@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\OmisePaymentController;
+use App\Http\Controllers\EventScraperController;
 
 /*
 |--------------------------------------------------------------------------
@@ -71,22 +72,22 @@ Route::get('/fix-now', function () {
         
         DB::statement("
             CREATE TABLE tickets (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                ticket_number TEXT UNIQUE NOT NULL,
-                event_name TEXT DEFAULT 'Waterfall Party Echo' NOT NULL,
-                attendee_name TEXT NOT NULL,
-                attendee_email TEXT NOT NULL,
-                attendee_phone TEXT,
-                price REAL NOT NULL,
-                currency TEXT DEFAULT 'THB' NOT NULL,
-                payment_method TEXT CHECK (payment_method IN ('cash', 'omise')) DEFAULT 'omise' NOT NULL,
-                payment_status TEXT CHECK (payment_status IN ('pending', 'completed', 'failed', 'refunded')) DEFAULT 'pending' NOT NULL,
-                tab_payment_id TEXT,
-                qr_code TEXT DEFAULT '' NOT NULL,
-                status TEXT CHECK (status IN ('active', 'used', 'cancelled')) DEFAULT 'active' NOT NULL,
-                created_at TEXT NOT NULL,
-                updated_at TEXT NOT NULL
-            )
+                id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                ticket_number VARCHAR(255) UNIQUE NOT NULL,
+                event_name VARCHAR(255) DEFAULT 'Waterfall Party Echo' NOT NULL,
+                attendee_name VARCHAR(255) NOT NULL,
+                attendee_email VARCHAR(255) NOT NULL,
+                attendee_phone VARCHAR(20),
+                price DECIMAL(10,2) NOT NULL,
+                currency VARCHAR(3) DEFAULT 'THB' NOT NULL,
+                payment_method ENUM('cash', 'omise') DEFAULT 'omise' NOT NULL,
+                payment_status ENUM('pending', 'completed', 'failed', 'refunded') DEFAULT 'pending' NOT NULL,
+                tab_payment_id VARCHAR(255),
+                qr_code TEXT NOT NULL,
+                status ENUM('active', 'used', 'cancelled') DEFAULT 'active' NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ");
         
         return response()->json([
@@ -99,4 +100,11 @@ Route::get('/fix-now', function () {
             'error' => $e->getMessage()
         ], 500);
     }
+});
+
+// Event Scraper Routes
+Route::prefix('events')->group(function () {
+    Route::get('/', [EventScraperController::class, 'getEvents']);
+    Route::post('/scrape', [EventScraperController::class, 'runScraper']);
+    Route::get('/stats', [EventScraperController::class, 'getEventStats']);
 });
