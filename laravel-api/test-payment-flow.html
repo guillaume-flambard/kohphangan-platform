@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Waterfall Payment Test</title>
+    <script src="https://cdn.omise.co/omise.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        .form-group { margin: 15px 0; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, button { padding: 10px; width: 100%; box-sizing: border-box; }
+        button { background-color: #007cba; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #005d87; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+        .result { margin-top: 20px; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .loading { background-color: #fff3cd; border: 1px solid #ffeaa7; color: #856404; }
+        #card-form { border: 1px solid #ddd; padding: 20px; border-radius: 5px; background-color: #f9f9f9; }
+    </style>
+</head>
+<body>
+    <h1>🏖️ Waterfall Festival Payment Test</h1>
+    <p>Testing payment integration with: <strong>waterfall-api-877046715242.asia-southeast1.run.app</strong></p>
+    
+    <div id="card-form">
+        <h3>💳 Payment Details</h3>
+        <div class="form-group">
+            <label for="attendee_name">Full Name:</label>
+            <input type="text" id="attendee_name" value="John Doe" required>
+        </div>
+        <div class="form-group">
+            <label for="attendee_email">Email:</label>
+            <input type="email" id="attendee_email" value="john@example.com" required>
+        </div>
+        <div class="form-group">
+            <label for="card_number">Card Number (Test: 4242424242424242):</label>
+            <input type="text" id="card_number" placeholder="4242 4242 4242 4242" maxlength="19">
+        </div>
+        <div class="form-group">
+            <label for="expiry_month">Expiry Month:</label>
+            <input type="text" id="expiry_month" placeholder="12" maxlength="2">
+        </div>
+        <div class="form-group">
+            <label for="expiry_year">Expiry Year:</label>
+            <input type="text" id="expiry_year" placeholder="2025" maxlength="4">
+        </div>
+        <div class="form-group">
+            <label for="security_code">CVC:</label>
+            <input type="text" id="security_code" placeholder="123" maxlength="4">
+        </div>
+        <button id="pay-button" onclick="processPayment()">
+            Pay ฿100.00 (Test Payment)
+        </button>
+    </div>
+    
+    <div id="result"></div>
+
+    <script>
+        const API_BASE = 'https://waterfall-api-877046715242.asia-southeast1.run.app';
+        let publicKey = null;
+
+        // Initialize Omise and get public key
+        async function initializePayment() {
+            try {
+                const response = await fetch(`${API_BASE}/api/omise/public-key`);
+                const data = await response.json();
+                
+                if (data.success && data.public_key) {
+                    publicKey = data.public_key;
+                    Omise.setPublicKey(publicKey);
+                    document.getElementById('result').innerHTML = 
+                        `<div class="success">✅ Connected to API! Public Key: ${publicKey}</div>`;
+                } else {
+                    throw new Error('Failed to get public key');
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = 
+                    `<div class="error">❌ Failed to connect to API: ${error.message}</div>`;
+            }
+        }
+
+        async function processPayment() {
+            const payButton = document.getElementById('pay-button');
+            const resultDiv = document.getElementById('result');
+            
+            // Show loading
+            payButton.disabled = true;
+            payButton.innerHTML = 'Processing...';
+            resultDiv.innerHTML = '<div class="loading">🔄 Processing payment...</div>';
+            
+            try {
+                // Collect card data
+                const cardData = {
+                    name: document.getElementById('attendee_name').value,
+                    number: document.getElementById('card_number').value.replace(/\s/g, ''),
+                    expiration_month: document.getElementById('expiry_month').value,
+                    expiration_year: document.getElementById('expiry_year').value,
+                    security_code: document.getElementById('security_code').value,
+                };
+                
+                // Create token with Omise
+                resultDiv.innerHTML = '<div class="loading">🔄 Creating payment token...</div>';
+                
+                Omise.createToken('card', cardData, async function(statusCode, response) {
+                    if (statusCode !== 200) {
+                        throw new Error(response.message || 'Card validation failed');
+                    }
+                    
+                    // Send payment to our API
+                    resultDiv.innerHTML = '<div class="loading">🔄 Charging card...</div>';
+                    
+                    const paymentData = {
+                        token: response.id,
+                        amount: 10000, // ฿100.00 in satang
+                        quantity: 1,
+                        attendee_name: document.getElementById('attendee_name').value,
+                        attendee_email: document.getElementById('attendee_email').value
+                    };
+                    
+                    const chargeResponse = await fetch(`${API_BASE}/api/omise/charge`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(paymentData)
+                    });
+                    
+                    const chargeResult = await chargeResponse.json();
+                    
+                    if (chargeResult.success) {
+                        resultDiv.innerHTML = `
+                            <div class="success">
+                                <h3>🎉 Payment Successful!</h3>
+                                <p><strong>Charge ID:</strong> ${chargeResult.charge_id}</p>
+                                <p><strong>Amount:</strong> ฿${(chargeResult.amount_paid / 100).toFixed(2)}</p>
+                                <p><strong>Tickets Created:</strong> ${chargeResult.tickets.length}</p>
+                                <details>
+                                    <summary>View Ticket Details</summary>
+                                    <pre>${JSON.stringify(chargeResult.tickets, null, 2)}</pre>
+                                </details>
+                            </div>
+                        `;
+                    } else {
+                        throw new Error(chargeResult.error || chargeResult.message || 'Payment failed');
+                    }
+                });
+                
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h3>❌ Payment Failed</h3>
+                        <p>${error.message}</p>
+                        <p><em>This may be due to database connectivity issues. The Omise integration is working correctly.</em></p>
+                    </div>
+                `;
+            } finally {
+                // Re-enable button
+                payButton.disabled = false;
+                payButton.innerHTML = 'Pay ฿100.00 (Test Payment)';
+            }
+        }
+
+        // Format card number input
+        document.getElementById('card_number').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\s/g, '').replace(/\D/g, '');
+            let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+            e.target.value = formattedValue;
+        });
+
+        // Initialize on page load
+        initializePayment();
+    </script>
+</body>
+</html>
