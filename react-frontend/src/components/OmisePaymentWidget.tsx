@@ -399,7 +399,7 @@ export default function OmisePaymentWidget({
 
         script.onload = async () => {
           // Get public key from backend
-          const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001';
+          const apiUrl = import.meta.env.VITE_API_URL || 'https://waterfall-api-877046715242.asia-southeast1.run.app';
           const response = await fetch(`${apiUrl}/api/omise/public-key`);
           const data = await response.json();
           
@@ -456,22 +456,20 @@ export default function OmisePaymentWidget({
     setIsProcessing(true);
 
     try {
-      // Create Omise token
-      const tokenData = {
-        card: {
-          name: formData.card_holder_name,
-          number: formData.card_number.replace(/\s/g, ''),
-          expiration_month: parseInt(formData.card_expiry_month),
-          expiration_year: parseInt(formData.card_expiry_year),
-          security_code: formData.card_cvv,
-        }
+      // Create Omise token - card data should be passed directly, not nested
+      const cardData = {
+        name: formData.card_holder_name,
+        number: formData.card_number.replace(/\s/g, ''),
+        expiration_month: parseInt(formData.card_expiry_month),
+        expiration_year: parseInt(formData.card_expiry_year),
+        security_code: formData.card_cvv,
       };
 
-      window.Omise.createToken('card', tokenData, async (statusCode: number, token: any) => {
+      window.Omise.createToken('card', cardData, async (statusCode: number, token: any) => {
         if (statusCode === 200) {
           try {
             // Send payment request to backend
-            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001';
+            const apiUrl = import.meta.env.VITE_API_URL || 'https://waterfall-api-877046715242.asia-southeast1.run.app';
             const paymentResponse = await fetch(`${apiUrl}/api/omise/charge`, {
               method: 'POST',
               headers: {
@@ -492,7 +490,12 @@ export default function OmisePaymentWidget({
             if (result.success) {
               onSuccess?.(result);
             } else {
-              onError?.(result.message || 'Payment failed');
+              // Check if it's a token reuse error
+              if (result.error && result.error.includes('token was already used')) {
+                onError?.('Payment token expired. Please refresh and try again.');
+              } else {
+                onError?.(result.message || result.error || 'Payment failed');
+              }
             }
           } catch (error) {
             onError?.('Payment processing failed');

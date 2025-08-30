@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
 import { 
   Calendar, 
   MapPin, 
@@ -13,141 +14,188 @@ import {
   ArrowLeft,
   Heart,
   Share2,
-  Ticket
+  Ticket,
+  AlertCircle,
+  RefreshCw,
+  TrendingUp
 } from 'lucide-react';
 
-interface Event {
-  id: string;
-  title: string;
+// API Types based on our Laravel API
+interface ScrapedEvent {
+  id: number;
+  channel: string;
   description: string;
-  date: string;
-  time: string;
-  venue: string;
-  location: string;
-  price: number;
-  genre: string[];
-  image: string;
-  capacity: number;
-  booked: number;
-  rating: number;
-  organizer: string;
-  featured: boolean;
+  clean_description: string;
+  event_type: 'party' | 'festival' | 'wellness' | 'general';
+  event_date: string | null;
+  formatted_event_date: string | null;
+  event_date_time: string | null;
+  location: string | null;
+  has_location: boolean;
+  keywords_found: string[];
+  primary_keywords: string[];
+  urls: string[];
+  mentions: string[];
+  urgency: string;
+  is_today: boolean;
+  is_tomorrow: boolean;
+  is_this_weekend: boolean;
+  emojis: {
+    type: string;
+    location: string;
+  };
+  date_posted: string;
+  created_at: string;
+  updated_at: string;
 }
 
-const mockEvents: Event[] = [
-  {
-    id: '1',
-    title: 'Full Moon Party',
-    description: 'The legendary monthly beach party that never stops',
-    date: '2025-01-13',
-    time: '20:00',
-    venue: 'Haad Rin Beach',
-    location: 'Koh Phangan, Thailand',
-    price: 500,
-    genre: ['Electronic', 'Trance', 'Techno'],
-    image: '/api/placeholder/600/400',
-    capacity: 8000,
-    booked: 6200,
-    rating: 4.8,
-    organizer: 'Full Moon Events',
-    featured: true
-  },
-  {
-    id: '2',
-    title: 'Half Moon Festival',
-    description: 'Jungle party with world-class DJs in the heart of the island',
-    date: '2025-01-20',
-    time: '22:00',
-    venue: 'Ban Tai Jungle',
-    location: 'Koh Phangan, Thailand',
-    price: 800,
-    genre: ['Psytrance', 'Progressive', 'Techno'],
-    image: '/api/placeholder/600/400',
-    capacity: 3000,
-    booked: 2100,
-    rating: 4.9,
-    organizer: 'Half Moon Productions',
-    featured: true
-  },
-  {
-    id: '3',
-    title: 'Sunset Beach Vibes',
-    description: 'Chill sunset sessions with house music and cocktails',
-    date: '2025-01-18',
-    time: '16:00',
-    venue: 'Secret Beach',
-    location: 'Koh Phangan, Thailand',
-    price: 300,
-    genre: ['House', 'Deep House', 'Chill'],
-    image: '/api/placeholder/600/400',
-    capacity: 500,
-    booked: 320,
-    rating: 4.6,
-    organizer: 'Sunset Collective',
-    featured: false
-  },
-  {
-    id: '4',
-    title: 'Jungle Experience',
-    description: 'Immersive forest party with natural acoustics',
-    date: '2025-01-25',
-    time: '21:00',
-    venue: 'Than Sadet Forest',
-    location: 'Koh Phangan, Thailand',
-    price: 650,
-    genre: ['Psytrance', 'Ambient', 'Progressive'],
-    image: '/api/placeholder/600/400',
-    capacity: 1200,
-    booked: 850,
-    rating: 4.7,
-    organizer: 'Jungle Collective',
-    featured: false
-  }
-];
+interface EventsResponse {
+  data: ScrapedEvent[];
+  links: {
+    first: string;
+    last: string;
+    prev: string | null;
+    next: string | null;
+  };
+  meta: {
+    current_page: number;
+    from: number;
+    last_page: number;
+    per_page: number;
+    to: number;
+    total: number;
+  };
+}
+
+interface EventStats {
+  success: boolean;
+  stats: {
+    total_events: number;
+    by_type: Record<string, number>;
+    by_channel: Record<string, number>;
+    recent_events: number;
+    upcoming_events: number;
+    events_today: number;
+    events_this_week: number;
+  };
+  popular_locations: Record<string, number>;
+  trending_keywords: Record<string, number>;
+}
+
+// API Configuration
+const API_BASE_URL = 'http://localhost:8000/api';
+
+// Custom hooks for API calls
+const useEvents = (filters: Record<string, any> = {}) => {
+  const queryParams = new URLSearchParams();
+  
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value && value !== 'all') {
+      queryParams.append(key, value.toString());
+    }
+  });
+
+  return useQuery<EventsResponse>({
+    queryKey: ['events', filters],
+    queryFn: async () => {
+      const response = await fetch(`${API_BASE_URL}/events?${queryParams.toString()}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch events');
+      }
+      return response.json();
+    },
+    staleTime: 30000, // 30 seconds
+  });
+};
+
+const useEventStats = () => {
+  return useQuery<EventStats>({
+    queryKey: ['eventStats'],
+    queryFn: async () => {
+      const response = await fetch(`${API_BASE_URL}/events/stats`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch event stats');
+      }
+      return response.json();
+    },
+    staleTime: 60000, // 1 minute
+  });
+};
 
 export default function EventsPage() {
   const navigate = useNavigate();
-  const [events, setEvents] = useState<Event[]>(mockEvents);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedGenre, setSelectedGenre] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<'date' | 'price' | 'popularity'>('date');
-  const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
+  const [selectedEventType, setSelectedEventType] = useState<string>('all');
+  const [selectedChannel, setSelectedChannel] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<'event_date' | 'date_posted' | 'created_at'>('event_date');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [urgencyFilter, setUrgencyFilter] = useState<string>('all');
 
-  const genres = ['all', 'Electronic', 'Trance', 'Techno', 'Psytrance', 'House', 'Progressive', 'Chill', 'Ambient'];
-
-  const filteredAndSortedEvents = events
-    .filter(event => {
-      const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           event.venue.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           event.organizer.toLowerCase().includes(searchQuery.toLowerCase());
-      
-      const matchesGenre = selectedGenre === 'all' || 
-                          event.genre.some(g => g.toLowerCase() === selectedGenre.toLowerCase());
-      
-      const matchesFeatured = !showFeaturedOnly || event.featured;
-      
-      return matchesSearch && matchesGenre && matchesFeatured;
-    })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case 'price':
-          return a.price - b.price;
-        case 'popularity':
-          return (b.booked / b.capacity) - (a.booked / a.capacity);
-        case 'date':
-        default:
-          return new Date(a.date).getTime() - new Date(b.date).getTime();
-      }
-    });
-
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { 
-      weekday: 'short', 
-      month: 'short', 
-      day: 'numeric' 
-    });
+  // Build filters for API
+  const filters = {
+    ...(searchQuery && { keywords: [searchQuery] }),
+    ...(selectedEventType !== 'all' && { event_type: selectedEventType }),
+    ...(selectedChannel !== 'all' && { channel: selectedChannel }),
+    ...(urgencyFilter !== 'all' && { urgency: urgencyFilter }),
+    sort_by: sortBy,
+    sort_direction: sortDirection,
+    per_page: 12,
   };
+
+  const { data: eventsData, isLoading, error, refetch } = useEvents(filters);
+  const { data: statsData } = useEventStats();
+
+  const eventTypes = ['all', 'party', 'festival', 'wellness', 'general'];
+  const channels = ['all', 'phanganparty', 'fullmoon_parties', 'koh_phangan_events', 'phangan_island_life', 'waterfall_festivals'];
+  const urgencyOptions = ['all', 'today', 'tomorrow', 'weekend', 'this_week', 'this_month', 'future'];
+
+  const events = eventsData?.data || [];
+  const meta = eventsData?.meta;
+
+  const getUrgencyBadge = (urgency: string) => {
+    const badges = {
+      today: { text: 'TODAY', color: 'bg-red-500 text-white' },
+      tomorrow: { text: 'TOMORROW', color: 'bg-orange-500 text-white' },
+      weekend: { text: 'THIS WEEKEND', color: 'bg-blue-500 text-white' },
+      this_week: { text: 'THIS WEEK', color: 'bg-green-500 text-white' },
+      this_month: { text: 'THIS MONTH', color: 'bg-purple-500 text-white' },
+      future: { text: 'UPCOMING', color: 'bg-gray-500 text-white' },
+    };
+    return badges[urgency as keyof typeof badges] || { text: 'TBD', color: 'bg-gray-400 text-white' };
+  };
+
+  const getTypeColor = (eventType: string) => {
+    const colors = {
+      party: 'from-pink-500 to-purple-600',
+      festival: 'from-yellow-400 to-orange-500',
+      wellness: 'from-green-400 to-blue-500',
+      general: 'from-gray-400 to-gray-600',
+    };
+    return colors[eventType as keyof typeof colors] || 'from-gray-400 to-gray-600';
+  };
+
+  if (error) {
+    return (
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center"
+      >
+        <div className="text-center p-8 bg-white/10 backdrop-blur-md rounded-lg border border-white/20">
+          <AlertCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-white mb-2">Failed to load events</h2>
+          <p className="text-blue-100 mb-4">Unable to connect to the events API</p>
+          <button 
+            onClick={() => refetch()}
+            className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-full transition-colors flex items-center gap-2 mx-auto"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Try Again
+          </button>
+        </div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div 
@@ -166,18 +214,34 @@ export default function EventsPage() {
               >
                 <ArrowLeft className="w-6 h-6 text-white" />
               </button>
-              <h1 className="text-2xl font-bold text-white">All Events</h1>
+              <div>
+                <h1 className="text-2xl font-bold text-white">Live Events</h1>
+                {statsData?.success && (
+                  <p className="text-sm text-blue-200">
+                    {statsData.stats.total_events} events from Telegram channels
+                  </p>
+                )}
+              </div>
             </div>
             
             <div className="flex items-center space-x-4">
-              <Link
-                to="/favorites"
+              {statsData?.success && (
+                <div className="hidden sm:flex items-center space-x-4 text-sm text-blue-200">
+                  <div className="flex items-center gap-1">
+                    <TrendingUp className="h-4 w-4" />
+                    {statsData.stats.events_today} today
+                  </div>
+                  <div>
+                    {statsData.stats.upcoming_events} upcoming
+                  </div>
+                </div>
+              )}
+              <button 
+                onClick={() => refetch()}
                 className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                disabled={isLoading}
               >
-                <Heart className="w-6 h-6 text-white" />
-              </Link>
-              <button className="p-2 hover:bg-white/10 rounded-full transition-colors">
-                <Share2 className="w-6 h-6 text-white" />
+                <RefreshCw className={`w-6 h-6 text-white ${isLoading ? 'animate-spin' : ''}`} />
               </button>
             </div>
           </div>
@@ -199,25 +263,27 @@ export default function EventsPage() {
             </div>
             
             <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as 'date' | 'price' | 'popularity')}
+              value={selectedChannel}
+              onChange={(e) => setSelectedChannel(e.target.value)}
               className="px-4 py-3 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
-              <option value="date">Sort by Date</option>
-              <option value="price">Sort by Price</option>
-              <option value="popularity">Sort by Popularity</option>
+              <option value="all">All Channels</option>
+              {channels.slice(1).map((channel) => (
+                <option key={channel} value={channel}>
+                  {channel.replace('_', ' ').toUpperCase()}
+                </option>
+              ))}
             </select>
             
-            <button
-              onClick={() => setShowFeaturedOnly(!showFeaturedOnly)}
-              className={`px-6 py-3 rounded-full font-medium transition-all ${
-                showFeaturedOnly
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-white/10 text-white border border-white/30 hover:bg-white/20'
-              }`}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as 'event_date' | 'date_posted' | 'created_at')}
+              className="px-4 py-3 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
-              Featured Only
-            </button>
+              <option value="event_date">Sort by Event Date</option>
+              <option value="date_posted">Sort by Posted Date</option>
+              <option value="created_at">Sort by Discovery</option>
+            </select>
           </div>
 
           {/* Genre Filter */}

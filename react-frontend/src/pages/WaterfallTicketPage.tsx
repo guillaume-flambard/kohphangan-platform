@@ -1,40 +1,35 @@
-import {useEffect} from 'react';
-import {motion} from 'framer-motion';
-import {Calendar, Clock, MapPin, Music, Sparkles} from 'lucide-react';
+import {useState} from 'react';
+import {motion, AnimatePresence} from 'framer-motion';
+import {Calendar, Clock, MapPin, Music, Sparkles, CheckCircle, XCircle} from 'lucide-react';
+import OmisePaymentWidget from '../components/OmisePaymentWidget';
 
 export default function WaterfallTicketPage() {
+  const [paymentStatus, setPaymentStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [paymentMessage, setPaymentMessage] = useState('');
+  const [tickets, setTickets] = useState<any[]>([]);
+
   const eventDetails = {
     name: 'Waterfall Festival Koh Phangan',
     subtitle: 'Special Edition • Aug 27th',
     date: 'Wednesday, Aug 27, 2025',
     time: '9:00 PM - 7:00 AM',
     location: 'Waterfall Festival, Koh Phangan',
+    image: '/waterfall-party.jpeg',
     price: 900,
     description: 'One last night to lose yourself in sound, jungle, and sunrise magic. Experience 4 custom stages in a natural waterfall setting.',
     included: ['Fast track entry', '1 free beer', '4 custom stages', 'Fire dancers', 'Laser shows', 'Food stalls', 'Chill zones']
   };
 
+  const handlePaymentSuccess = (data: any) => {
+    setPaymentStatus('success');
+    setTickets(data.tickets || []);
+    setPaymentMessage(`Payment successful! ${data.tickets?.length || 0} ticket(s) generated.`);
+  };
 
-  // Load Tab widget
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.type = 'text/javascript';
-    script.innerHTML = `
-      window.widgetSettings = {
-        businessCode: "eeatl",
-      };
-      (()=>{function t(){window.widgetSettings.baseURL=window.widgetSettings.baseURL||"https://checkout.tab.travel";var t=document.createElement("script"),e=(t.type="text/javascript",t.async=!0,t.src="https://checkout.tab.travel/widget.js",document.getElementsByTagName("script")[0]);e.parentNode.insertBefore(t,e)}"complete"===document.readyState?t():window.attachEvent?window.attachEvent("onload",t):window.addEventListener("load",t,!1)})();
-    `;
-    document.head.appendChild(script);
-
-    return () => {
-      try {
-        document.head.removeChild(script);
-      } catch (e) {
-        console.error('Error removing script:', e);
-      }
-    };
-  }, []);
+  const handlePaymentError = (error: string) => {
+    setPaymentStatus('error');
+    setPaymentMessage(error);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-teal-800 to-green-900 relative overflow-hidden">
@@ -67,92 +62,110 @@ export default function WaterfallTicketPage() {
       </div>
 
       <div className="relative z-10 container mx-auto px-4 py-8 max-w-md">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-6"
-        >
-          {/* Event Header */}
-          <div className="text-center text-white space-y-4">
+        <AnimatePresence mode="wait">
+          {paymentStatus === 'idle' && (
             <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2, type: "spring" }}
-              className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-400 to-teal-400 rounded-full mb-4 overflow-hidden"
+              key="payment"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
             >
-              <img 
-                src="/waterfall-party.jpeg" 
-                alt="Waterfall Festival" 
-                className="w-full h-full object-cover"
+              <OmisePaymentWidget
+                eventDetails={eventDetails}
+                onSuccess={handlePaymentSuccess}
+                onError={handlePaymentError}
               />
             </motion.div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-200 to-teal-200 bg-clip-text text-transparent">
-              {eventDetails.name}
-            </h1>
-            <div className="flex items-center justify-center gap-2 text-blue-200">
-              <Sparkles className="w-5 h-5" />
-              <span>Tropical Paradise Experience</span>
-              <Sparkles className="w-5 h-5" />
-            </div>
-          </div>
+          )}
 
-          {/* Event Details Card */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3 }}
-            className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 p-6 space-y-4"
-          >
-            <div className="grid grid-cols-1 gap-4">
-              <div className="flex items-center gap-3 text-white">
-                <Calendar className="w-5 h-5 text-blue-300" />
-                <span>{eventDetails.date}</span>
+          {paymentStatus === 'success' && (
+            <motion.div
+              key="success"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-white rounded-3xl shadow-2xl p-8 text-center space-y-6"
+            >
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, type: "spring" }}
+                className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto"
+              >
+                <CheckCircle className="w-12 h-12 text-green-600" />
+              </motion.div>
+              
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Payment Successful!</h2>
+                <p className="text-gray-600">{paymentMessage}</p>
               </div>
-              <div className="flex items-center gap-3 text-white">
-                <Clock className="w-5 h-5 text-blue-300" />
-                <span>{eventDetails.time}</span>
-              </div>
-              <div className="flex items-center gap-3 text-white">
-                <MapPin className="w-5 h-5 text-blue-300" />
-                <span>{eventDetails.location}</span>
-              </div>
-              <div className="flex items-center gap-3 text-white">
-                <Music className="w-5 h-5 text-blue-300" />
-                <span>Electronic • Tropical House • Chill</span>
-              </div>
-            </div>
 
-            <div className="border-t border-white/20 pt-4">
-              <p className="text-blue-100 text-sm leading-relaxed">
-                {eventDetails.description}
-              </p>
-            </div>
+              {tickets.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-gray-800">Your Tickets</h3>
+                  {tickets.map((ticket, index) => (
+                    <motion.div
+                      key={ticket.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200"
+                    >
+                      <div className="flex justify-between items-center">
+                        <div className="text-left">
+                          <div className="font-medium text-gray-900">{ticket.ticket_number}</div>
+                          <div className="text-sm text-gray-600">{ticket.attendee_name}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-blue-600">฿{ticket.price}</div>
+                          <div className="text-xs text-gray-500">QR: {ticket.qr_code.slice(-8)}</div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
 
-            <div className="space-y-2">
-              <h4 className="text-white font-semibold">What's Included:</h4>
-              <div className="grid grid-cols-2 gap-2">
-                {eventDetails.included.map((item, index) => (
-                  <div key={index} className="flex items-center gap-2 text-blue-100 text-sm">
-                    <div className="w-1.5 h-1.5 bg-teal-400 rounded-full" />
-                    {item}
-                  </div>
-                ))}
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => window.location.reload()}
+                className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors"
+              >
+                Buy More Tickets
+              </motion.button>
+            </motion.div>
+          )}
+
+          {paymentStatus === 'error' && (
+            <motion.div
+              key="error"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-white rounded-3xl shadow-2xl p-8 text-center space-y-6"
+            >
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, type: "spring" }}
+                className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto"
+              >
+                <XCircle className="w-12 h-12 text-red-600" />
+              </motion.div>
+              
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Payment Failed</h2>
+                <p className="text-gray-600">{paymentMessage}</p>
               </div>
-            </div>
 
-            <div className="bg-gradient-to-r from-green-500 to-teal-500 rounded-xl p-4 text-center">
-              <div className="text-white text-2xl font-bold">
-                ฿{eventDetails.price.toLocaleString()}
-              </div>
-              <div className="text-green-100 text-sm">per person</div>
-            </div>
-          </motion.div>
-
-
-          <div className="text-center text-blue-200 text-sm">
-            <p>Secure payment • Instant confirmation • Mobile optimized</p>
-          </div>
-        </motion.div>
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setPaymentStatus('idle')}
+                className="w-full py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors"
+              >
+                Try Again
+              </motion.button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
