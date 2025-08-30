@@ -468,10 +468,22 @@ export default function OmisePaymentWidget({
       window.Omise.createToken('card', cardData, async (statusCode: number, token: any) => {
         if (statusCode === 200) {
           try {
-            // Send payment request to backend
+            // Send payment request to backend with extended timeout for payment processing
             const apiUrl = import.meta.env.VITE_API_URL || 'https://waterfall-api-877046715242.asia-southeast1.run.app';
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minute timeout for payment processing
+            
+            console.log('Sending payment request:', {
+              token: token.id,
+              amount: eventDetails.price * 100,
+              quantity: ticketQuantity,
+              attendee_name: formData.attendee_name,
+              attendee_email: formData.attendee_email,
+            });
+            
             const paymentResponse = await fetch(`${apiUrl}/api/omise/charge`, {
               method: 'POST',
+              signal: controller.signal,
               headers: {
                 'Content-Type': 'application/json',
               },
@@ -485,11 +497,23 @@ export default function OmisePaymentWidget({
               })
             });
 
+            clearTimeout(timeoutId);
+            console.log('Payment response status:', paymentResponse.status, paymentResponse.statusText);
+
+            if (!paymentResponse.ok) {
+              const errorText = await paymentResponse.text();
+              console.error('Payment API error:', errorText);
+              throw new Error(`Payment API error: ${paymentResponse.status} ${paymentResponse.statusText}`);
+            }
+
             const result = await paymentResponse.json();
+            console.log('Payment result:', result);
 
             if (result.success) {
+              console.log('Payment successful!', result);
               onSuccess?.(result);
             } else {
+              console.error('Payment failed:', result);
               // Check if it's a token reuse error
               if (result.error && result.error.includes('token was already used')) {
                 onError?.('Payment token expired. Please refresh and try again.');
@@ -498,7 +522,12 @@ export default function OmisePaymentWidget({
               }
             }
           } catch (error) {
-            onError?.('Payment processing failed');
+            console.error('Payment processing error:', error);
+            if ((error as Error).name === 'AbortError') {
+              onError?.('Payment is taking longer than expected. The transaction may still be processing in the background. Please check your Omise dashboard or contact support.');
+            } else {
+              onError?.(`Payment processing failed: ${(error as Error).message || error}`);
+            }
           }
         } else {
           onError?.(token.message || 'Card validation failed');

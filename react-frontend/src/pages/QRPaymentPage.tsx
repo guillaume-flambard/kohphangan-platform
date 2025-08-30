@@ -169,7 +169,7 @@ export default function QRPaymentPage() {
                         </div>
                         <div className="text-right">
                           <div className="font-bold text-blue-600">฿{ticket.price}</div>
-                          <div className="text-xs text-gray-500">QR: {ticket.qr_code.slice(-8)}</div>
+                          <div className="text-xs text-gray-500">QR: {ticket.qr_code?.slice(-8) || 'N/A'}</div>
                         </div>
                       </div>
                     </motion.div>
